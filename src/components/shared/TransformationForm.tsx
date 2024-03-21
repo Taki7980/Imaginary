@@ -80,7 +80,7 @@ const TransformationForm = ({
 		resolver: zodResolver(formSchema),
 		defaultValues: initialValues,
 	});
-	
+
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		// console.log(values);
 		if (data || image) {
@@ -184,11 +184,10 @@ const TransformationForm = ({
 	};
 
 	useEffect(() => {
-	  if (image && (type === 'restore' || type === 'removeBackground')) {
-		setnewTransfromation(transformationType.config);
-	  }
-	}, [image,transformationType.config,type])
-	
+		if (image && (type === "restore" || type === "removeBackground")) {
+			setnewTransfromation(transformationType.config);
+		}
+	}, [image, transformationType.config, type]);
 
 	return (
 		<>
@@ -197,7 +196,7 @@ const TransformationForm = ({
 					onSubmit={form.handleSubmit(onSubmit)}
 					className="space-y-8"
 				>
-					{/* {creditBalance < Math.abs(creditFee) && <InsufficientCreditsModal/>} */}
+					 {creditBalance > Math.abs(creditFee) && <InsufficientCreditsModal />}
 					<CustomField
 						control={form.control}
 						name="title"
@@ -215,6 +214,7 @@ const TransformationForm = ({
 							className="w-full"
 							render={({ field }) => (
 								<Select
+									value={field.value}
 									onValueChange={(value) => {
 										onSelectFieldHandler(
 											value,
