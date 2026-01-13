@@ -16,6 +16,7 @@ export interface IImage extends Document {
 		_id: string;
 		firstName: string;
 		lastName: string;
+		clerkId?: string;
 	};
 	createdAt?: Date;
 	updatedAt?: Date;

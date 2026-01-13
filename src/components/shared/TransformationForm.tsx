@@ -57,10 +57,10 @@ const TransformationForm = ({
 	const router = useRouter();
 	const transformationType = transformationTypes[type];
 	const [image, setImage] = useState(data);
-	const [newTransfromation, setnewTransfromation] =
+	const [newTransformation, setNewTransformation] =
 		useState<Transformations | null>(null);
-	const [isSubmitting, setisSubmitting] = useState<boolean>(false);
-	const [isTransforming, setisTransforming] = useState<boolean>(false);
+	const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+	const [isTransforming, setIsTransforming] = useState<boolean>(false);
 	const [transformationConfig, setTransformationConfig] =
 		useState<Transformations | null>(config);
 
@@ -82,7 +82,7 @@ const TransformationForm = ({
 	});
 
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
-		// console.log(values);
+		setIsSubmitting(true);
 		if (data || image) {
 			const transformationUrl = getCldImageUrl({
 				width: image?.width,
@@ -116,7 +116,7 @@ const TransformationForm = ({
 						router.push(`/transformations/${newImage._id}`);
 					}
 				} catch (error) {
-					console.log(error);
+					console.error("Error adding image:", error);
 				}
 			}
 			if (action === "Update") {
@@ -133,11 +133,11 @@ const TransformationForm = ({
 						router.push(`/transformations/${updatedImage._id}`);
 					}
 				} catch (error) {
-					console.log(error);
+					console.error("Error updating image:", error);
 				}
 			}
 		}
-		setisSubmitting(false);
+		setIsSubmitting(false);
 	};
 
 	const onSelectFieldHandler = (
@@ -151,7 +151,7 @@ const TransformationForm = ({
 			width: imageSize.width,
 			height: imageSize.height,
 		}));
-		setnewTransfromation(transformationType.config);
+		setNewTransformation(transformationType.config);
 		return onChangeField(value);
 	};
 
@@ -161,8 +161,7 @@ const TransformationForm = ({
 		type: string,
 		onChangeField: (value: string) => void
 	) => {
-		debounce(() => {}, 1000);
-		setnewTransfromation((prevStep: any) => ({
+		setNewTransformation((prevStep: any) => ({
 			...prevStep,
 			[type]: {
 				...prevStep?.[type],
@@ -172,12 +171,12 @@ const TransformationForm = ({
 		return onChangeField(value);
 	};
 
-	const onTransfromHandler = async () => {
-		setisTransforming(true);
+	const onTransformHandler = async () => {
+		setIsTransforming(true);
 		setTransformationConfig(
-			deepMergeObjects(newTransfromation, transformationConfig)
+			deepMergeObjects(newTransformation, transformationConfig)
 		);
-		setnewTransfromation(null);
+		setNewTransformation(null);
 		startTransition(async () => {
 			await updateCredits(userId, creditFee);
 		});
@@ -185,7 +184,7 @@ const TransformationForm = ({
 
 	useEffect(() => {
 		if (image && (type === "restore" || type === "removeBackground")) {
-			setnewTransfromation(transformationType.config);
+			setNewTransformation(transformationType.config);
 		}
 	}, [image, transformationType.config, type]);
 
@@ -196,7 +195,7 @@ const TransformationForm = ({
 					onSubmit={form.handleSubmit(onSubmit)}
 					className="space-y-8"
 				>
-					 {creditBalance > Math.abs(creditFee) && <InsufficientCreditsModal />}
+					{creditBalance < Math.abs(creditFee) && <InsufficientCreditsModal />}
 					<CustomField
 						control={form.control}
 						name="title"
@@ -315,23 +314,23 @@ const TransformationForm = ({
 								/>
 							)}
 						/>
-						<TransformedImage
-							image={image}
-							type={type}
-							title={form.getValues().title}
-							isTransforming={isTransforming}
-							setIsTransforming={setisTransforming}
-							transformationConfig={transformationConfig}
-						/>
+					<TransformedImage
+						image={image}
+						type={type}
+						title={form.getValues().title}
+						isTransforming={isTransforming}
+						setIsTransforming={setIsTransforming}
+						transformationConfig={transformationConfig}
+					/>
 					</div>
 					<div className="flex flex-col gap-4">
 						<Button
 							disabled={
-								isTransforming || newTransfromation === null
+								isTransforming || newTransformation === null
 							}
 							type="button"
 							className="submit-button capitalize"
-							onClick={onTransfromHandler}
+							onClick={onTransformHandler}
 						>
 							{isTransforming
 								? "Transforming..."

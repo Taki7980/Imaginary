@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { createTransaction } from "@/lib/actions/transaction.action";
 import { NextResponse } from "next/server";
-import stripe from "stripe";
+import Stripe from "stripe";
 
 export async function POST(request: Request) {
 	const body = await request.text();
@@ -9,12 +9,23 @@ export async function POST(request: Request) {
 	const sig = request.headers.get("stripe-signature") as string;
 	const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
+	if (!endpointSecret) {
+		return NextResponse.json(
+			{ message: "Missing webhook secret" },
+			{ status: 500 }
+		);
+	}
+
 	let event;
 
 	try {
-		event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
-	} catch (err) {
-		return NextResponse.json({ message: "Webhook error", error: err });
+		event = Stripe.webhooks.constructEvent(body, sig, endpointSecret);
+	} catch (err: any) {
+		console.error("Stripe webhook error:", err.message);
+		return NextResponse.json(
+			{ message: "Webhook error", error: err.message },
+			{ status: 400 }
+		);
 	}
 
 	// Get the ID and type

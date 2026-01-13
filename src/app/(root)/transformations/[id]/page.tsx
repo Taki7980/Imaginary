@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs";
+import { currentUser } from '@clerk/nextjs/server'
 import Image from "next/image";
 import Link from "next/link";
 
@@ -9,10 +9,14 @@ import { getImageById } from "@/lib/actions/image.actions";
 import { getImageSize } from "@/lib/utils";
 import { DeleteConfirmation } from "@/components/shared/DeleteConfirmation";
 
-const ImageDetails = async ({ params: { id } }: SearchParamProps) => {
-	const { userId } = auth();
+const ImageDetails = async ({ params: { id } }: { params: { id: string } }) => {
+	const userId = (await currentUser())?.id;
 
 	const image = await getImageById(id);
+
+	if (!image) {
+		return <div>Image not found</div>;
+	}
 
 	return (
 		<>
@@ -103,7 +107,7 @@ const ImageDetails = async ({ params: { id } }: SearchParamProps) => {
 					/>
 				</div>
 
-				{userId === image.author.clerkId && (
+				{userId && image.author?.clerkId && userId === image.author.clerkId && (
 					<div className="mt-4 space-y-4">
 						<Button
 							asChild

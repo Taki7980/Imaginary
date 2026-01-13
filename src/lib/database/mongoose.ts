@@ -1,35 +1,34 @@
 import mongoose, { Mongoose } from "mongoose";
 
-const MongoDB_Url = process.env.MONGODB_URL;
+const MongoDB_Url = process.env.MONGODB_URI;
 
 interface mongooseConnection {
-      conn: Mongoose | null;
-      promise: Promise<Mongoose> | null;
+  conn: Mongoose | null;
+  promise: Promise<Mongoose> | null;
 }
 
 let cached: mongooseConnection = (global as any).mongoose;
 
 if (!cached) {
-      cached = (global as any).mongoose = { conn: null, promise: null }
+  cached = (global as any).mongoose = { conn: null, promise: null };
 }
 
 export const connectToDatabase = async () => {
-      if (cached.conn) {
-            return cached.conn;
-      }
-      if (!MongoDB_Url) {
-            throw new Error("MongoDB_Url is not defined");
-      }
+  if (cached.conn) return cached.conn;
 
-      if (!cached.promise) {
-            const opts = {
-                  bufferCommands: false,
-                  dbName:"imaginary",
-            };
+  if (!MongoDB_Url) {
+    throw new Error("MONGODB_URI is not defined");
+  }
 
-            cached.promise = cached.promise || mongoose.connect(MongoDB_Url, opts)
-      }
-      cached.conn = await cached.promise;
-      return cached.conn;
-}
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(MongoDB_Url, {
+      bufferCommands: false,
+      dbName: "imaginary",
+    });
+  }
+  console.log("Mongo URI loaded:", !!process.env.MONGODB_URI);
+
+  cached.conn = await cached.promise;
+  return cached.conn;
+};
 

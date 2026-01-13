@@ -49,28 +49,35 @@ const Checkout = ({
 	}, [toast]);
 
 	const onCheckout = async () => {
-		const transaction = {
-			plan,
-			amount,
-			credits,
-			buyerId,
-		};
+		try {
+			const transaction = {
+				plan,
+				amount,
+				credits,
+				buyerId,
+			};
 
-		await checkoutCredits(transaction);
+			await checkoutCredits(transaction);
+		} catch (error) {
+			toast({
+				title: "Checkout failed",
+				description: "Something went wrong. Please try again.",
+				duration: 5000,
+				className: "error-toast",
+			});
+		}
 	};
 
 	return (
-		<form action={onCheckout} method="POST">
-			<section>
-				<Button
-					type="submit"
-					role="link"
-					className="w-full rounded-full bg-purple-gradient bg-cover"
-				>
-					Buy Credit
-				</Button>
-			</section>
-		</form>
+		<section>
+			<Button
+				type="button"
+				onClick={onCheckout}
+				className="w-full rounded-full bg-purple-gradient bg-cover"
+			>
+				Buy Credit
+			</Button>
+		</section>
 	);
 };
 

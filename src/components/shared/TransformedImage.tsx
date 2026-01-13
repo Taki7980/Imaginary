@@ -79,7 +79,7 @@ const TransformedImage = ({
 					)}
 				</div>
 			) : (
-				<div className="transformed-placeholder">Transfromed Image</div>
+				<div className="transformed-placeholder">Transformed Image</div>
 			)}
 		</div>
 	);

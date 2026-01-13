@@ -1,11 +1,51 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-
+import { auth } from "@clerk/nextjs/server";
 import User from "../database/models/user.model";
 import { connectToDatabase } from "../database/mongoose";
 import { handleError } from "../utils";
+import { clerkClient } from "@clerk/nextjs";
 
+// get the getCurrentUser
+export async function getCurrentUser() {
+  await connectToDatabase();
+
+  const { userId } = auth();
+  if (!userId) return null;
+
+  // 1️⃣ Try by clerkId
+  let user = await User.findOne({ clerkId: userId });
+  if (user) return user;
+
+  // 2️⃣ Fetch Clerk user
+  const clerkUser = await clerkClient.users.getUser(userId);
+  const email = clerkUser.emailAddresses[0]?.emailAddress;
+
+  // 3️⃣ Try by email (legacy user)
+  if (email) {
+    user = await User.findOne({ email });
+    if (user) {
+      user.clerkId = userId;
+      await user.save();
+      return user;
+    }
+  }
+
+  // 4️⃣ Create new user
+  user = await User.create({
+    clerkId: userId,
+    email,
+    username:
+      clerkUser.username ||
+      clerkUser.firstName ||
+      email?.split("@")[0],
+    photo: clerkUser.imageUrl,
+    credits: 10,
+  });
+
+  return user;
+}
 // CREATE
 export async function createUser(user: CreateUserParams) {
   try {
@@ -20,20 +60,43 @@ export async function createUser(user: CreateUserParams) {
 }
 
 // READ
-export async function getUserById(userId: string) {
-  try {
-    await connectToDatabase();
+export async function getUserById() {
+  await connectToDatabase();
 
-    const user = await User.findOne({ clerkId: userId });
+  const { userId } = auth();
+  if (!userId) return null;
 
-    if (!user) throw new Error("User not found");
+  const clerkUser = await clerkClient.users.getUser(userId);
+  const email = clerkUser.emailAddresses[0]?.emailAddress;
 
-    return JSON.parse(JSON.stringify(user));
-  } catch (error) {
-    handleError(error);
+  // 1️⃣ Try to find by clerkId
+  let user = await User.findOne({ clerkId: userId });
+  if (user) return user;
+
+  // 2️⃣ Try to find by email (legacy user)
+  user = await User.findOne({ email });
+
+  if (user) {
+    // 🔗 Link legacy user to Clerk
+    user.clerkId = userId;
+    await user.save();
+    return user;
   }
-}
 
+  // 3️⃣ Create brand-new user
+  user = await User.create({
+    clerkId: userId,
+    email,
+    username:
+      clerkUser.username ||
+      clerkUser.firstName ||
+      email?.split("@")[0],
+    photo: clerkUser.imageUrl,
+    credits: 10,
+  });
+
+  return user;
+}
 // UPDATE
 export async function updateUser(clerkId: string, user: UpdateUserParams) {
   try {
@@ -44,7 +107,7 @@ export async function updateUser(clerkId: string, user: UpdateUserParams) {
     });
 
     if (!updatedUser) throw new Error("User update failed");
-    
+
     return JSON.parse(JSON.stringify(updatedUser));
   } catch (error) {
     handleError(error);
@@ -80,11 +143,11 @@ export async function updateCredits(userId: string, creditFee: number) {
 
     const updatedUserCredits = await User.findOneAndUpdate(
       { _id: userId },
-      { $inc: { creditBalance: creditFee }},
+      { $inc: { creditBalance: creditFee } },
       { new: true }
-    )
+    );
 
-    if(!updatedUserCredits) throw new Error("User credits update failed");
+    if (!updatedUserCredits) throw new Error("User credits update failed");
 
     return JSON.parse(JSON.stringify(updatedUserCredits));
   } catch (error) {

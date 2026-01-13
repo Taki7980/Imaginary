@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs";
+import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from "next/navigation";
 
 import Header from "@/components/shared/Header";
@@ -7,16 +7,27 @@ import { transformationTypes } from "@/constants/SidebarLinks";
 import { getUserById } from "@/lib/actions/user.actions";
 import { getImageById } from "@/lib/actions/image.actions";
 
-const Page = async ({ params: { id } }: SearchParamProps) => {
-	const { userId } = auth();
-
+const Page = async ({ params: { id } }: { params: { id: string } }) => {
+	const userId = (await currentUser())?.id;
 	if (!userId) redirect("/sign-in");
 
 	const user = await getUserById(userId);
 	const image = await getImageById(id);
 
+	if (!user || !image) {
+		redirect("/");
+	}
+
+	if (image.author?.clerkId !== userId) {
+		redirect("/");
+	}
+
 	const transformation =
 		transformationTypes[image.transformationType as TransformationTypeKey];
+
+	if (!transformation) {
+		redirect("/");
+	}
 
 	return (
 		<>
