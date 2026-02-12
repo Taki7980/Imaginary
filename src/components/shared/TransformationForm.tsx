@@ -85,13 +85,20 @@ const TransformationForm = ({
 		setIsSubmitting(true);
 		if (data || image) {
 			const publicId = image?.publicId;
+			const width = image?.width;
+			const height = image?.height;
+			const secureURL = image?.secureURL;
 			if (!publicId) {
 				setIsSubmitting(false);
 				return;
 			}
+			if (!width || !height || !secureURL) {
+				setIsSubmitting(false);
+				return;
+			}
 			const transformationUrl = getCldImageUrl({
-				width: image?.width,
-				height: image?.height,
+				width,
+				height,
 				src: publicId,
 				...transformationConfig,
 			});
@@ -99,10 +106,10 @@ const TransformationForm = ({
 				title: values.title,
 				publicId,
 				transformationType: type,
-				width: image?.width,
-				height: image?.height,
+				width,
+				height,
 				config: transformationConfig,
-				secureURL: image?.secureURL,
+				secureURL,
 				transformationURL: transformationUrl,
 				aspectRatio: values.aspectRatio,
 				prompt: values.prompt,
