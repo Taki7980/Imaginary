@@ -84,15 +84,20 @@ const TransformationForm = ({
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
 		setIsSubmitting(true);
 		if (data || image) {
+			const publicId = image?.publicId;
+			if (!publicId) {
+				setIsSubmitting(false);
+				return;
+			}
 			const transformationUrl = getCldImageUrl({
 				width: image?.width,
 				height: image?.height,
-				src: image?.publicId,
+				src: publicId,
 				...transformationConfig,
 			});
 			const imageData = {
 				title: values.title,
-				publicId: image?.publicId,
+				publicId,
 				transformationType: type,
 				width: image?.width,
 				height: image?.height,
