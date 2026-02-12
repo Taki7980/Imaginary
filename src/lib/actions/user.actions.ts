@@ -46,6 +46,7 @@ export async function getCurrentUser() {
 
   return user;
 }
+
 // CREATE
 export async function createUser(user: CreateUserParams) {
   try {
@@ -59,11 +60,18 @@ export async function createUser(user: CreateUserParams) {
   }
 }
 
-// READ
-export async function getUserById() {
+// READ - FIXED VERSION: Now accepts clerkId as parameter
+export async function getUserById(clerkId?: string) {
   await connectToDatabase();
 
-  const { userId } = auth();
+  // If clerkId is provided, use it; otherwise get from auth context
+  let userId = clerkId;
+  
+  if (!userId) {
+    const authResult = auth();
+    userId = authResult.userId;
+  }
+  
   if (!userId) return null;
 
   const clerkUser = await clerkClient.users.getUser(userId);
@@ -74,13 +82,15 @@ export async function getUserById() {
   if (user) return user;
 
   // 2️⃣ Try to find by email (legacy user)
-  user = await User.findOne({ email });
+  if (email) {
+    user = await User.findOne({ email });
 
-  if (user) {
-    // 🔗 Link legacy user to Clerk
-    user.clerkId = userId;
-    await user.save();
-    return user;
+    if (user) {
+      // 🔗 Link legacy user to Clerk
+      user.clerkId = userId;
+      await user.save();
+      return user;
+    }
   }
 
   // 3️⃣ Create brand-new user
@@ -97,6 +107,7 @@ export async function getUserById() {
 
   return user;
 }
+
 // UPDATE
 export async function updateUser(clerkId: string, user: UpdateUserParams) {
   try {

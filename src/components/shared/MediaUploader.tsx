@@ -1,27 +1,26 @@
-"use client"
-import React from "react";
-import { useToast } from "../ui/use-toast";
+"use client";
+
+import { toast } from "sonner";
 import { CldImage, CldUploadWidget } from "next-cloudinary";
-import Image from "next/image";
 import { dataUrl, getImageSize } from "@/lib/utils";
 import { PlaceholderValue } from "next/dist/shared/lib/get-img-props";
+import Image from "next/image";
 
 type MediaUploaderProps = {
 	onValueChange: (value: string) => void;
 	setImage: React.Dispatch<any>;
-	image: any;
 	publicId: string;
+	image: any;
 	type: string;
 };
 
 const MediaUploader = ({
 	onValueChange,
 	setImage,
-	image,
 	publicId,
+	image,
 	type,
 }: MediaUploaderProps) => {
-	const { toast } = useToast();
 	const onUploadSuccessHandler = (result: any) => {
 		setImage((prevState: any) => ({
 			...prevState,
@@ -33,30 +32,20 @@ const MediaUploader = ({
 
 		onValueChange(result?.info?.public_id);
 
-		toast({
-			title: "Upload Successful",
-			description:
-				"Your image has been uploaded successfully and 1 credit has been deducted from your account",
-
-			duration: 5000,
-
-			className: "success-toast",
+		toast.success("Image uploaded successfully", {
+			description: "1 credit was deducted from your account",
 		});
 	};
-	const onUploadErrorHandler = (error: any) => {
-		toast({
-			title: "Upload Unsuccessful",
-			description: "An error occurred while uploading",
 
-			duration: 5000,
-
-			className: "error-toast",
+	const onUploadErrorHandler = () => {
+		toast.error("Something went wrong while uploading", {
+			description: "Please try again",
 		});
 	};
 
 	return (
 		<CldUploadWidget
-			uploadPreset="ns_imaginary"
+			uploadPreset="imaginary_preset"
 			options={{
 				multiple: false,
 				resourceType: "image",
@@ -66,35 +55,33 @@ const MediaUploader = ({
 		>
 			{({ open }) => (
 				<div className="flex flex-col gap-4">
-					<h3 className="h3-bold text-dark-600">original</h3>
+					<h3 className="h3-bold text-dark-600">Original</h3>
+
 					{publicId ? (
-						<div className="cursor-pointer overflow-hidden rounded-[10px]">
-							<CldImage
-								width={getImageSize(type, image, "width")}
-								height={getImageSize(type, image, "height")}
-								src={publicId}
-								alt="image"
-								sizes={"(max-width:767px)100vw,50vw"}
-								placeholder={dataUrl as PlaceholderValue}
-								className="media-uploader_cldImage"
-							/>
-						</div>
+						<>
+							<div className="cursor-pointer overflow-hidden rounded-[10px]">
+								<CldImage
+									width={getImageSize(type, image, "width")}
+									height={getImageSize(type, image, "height")}
+									src={publicId}
+									alt="image"
+									sizes={"(max-width: 767px) 100vw, 50vw"}
+									placeholder={dataUrl as PlaceholderValue}
+									className="media-uploader_cldImage"
+								/>
+							</div>
+						</>
 					) : (
-						<div
-							className="media-uploader_cta"
-							onClick={() => open()}
-						>
+						<div className="media-uploader_cta" onClick={() => open()}>
 							<div className="media-uploader_cta-image">
 								<Image
 									src="/assets/icons/add.svg"
-									alt="icon"
+									alt="Add Image"
 									width={24}
 									height={24}
 								/>
 							</div>
-							<p className="p-14-medium">
-								Click here to upload image
-							</p>
+							<p className="p-14-medium">Click here to upload image</p>
 						</div>
 					)}
 				</div>
