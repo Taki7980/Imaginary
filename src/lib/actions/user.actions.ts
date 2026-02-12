@@ -65,11 +65,11 @@ export async function getUserById(clerkId?: string) {
   await connectToDatabase();
 
   // If clerkId is provided, use it; otherwise get from auth context
-  let userId = clerkId;
+  let userId: string | undefined = clerkId;
   
   if (!userId) {
     const authResult = auth();
-    userId = authResult.userId;
+    userId = authResult.userId ?? undefined;
   }
   
   if (!userId) return null;
