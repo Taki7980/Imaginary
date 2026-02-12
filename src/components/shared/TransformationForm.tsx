@@ -108,7 +108,7 @@ const TransformationForm = ({
 				transformationType: type,
 				width,
 				height,
-				config: transformationConfig,
+				config: transformationConfig || {},
 				secureURL,
 				transformationURL: transformationUrl,
 				aspectRatio: values.aspectRatio,
