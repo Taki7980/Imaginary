@@ -147,10 +147,13 @@ const MediaUploader = ({ onValueChange, setImage, publicId, image, type }: Media
 
       {/* Media Uploader */}
       <CldUploadWidget
-        uploadPreset="imaginary_preset"
+        uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET ?? "imaginary_preset"}
         options={{
           multiple: false,
           resourceType: "image",
+          maxFileSize: 5 * 1024 * 1024,
+          clientAllowedFormats: ["png", "jpg", "jpeg", "webp"],
+          sources: ["local", "camera", "url"],
         }}
         onSuccess={onUploadSuccessHandler}
         onError={onUploadErrorHandler}
