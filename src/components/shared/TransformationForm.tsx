@@ -133,10 +133,15 @@ const TransformationForm = ({
 			}
 			if (action === "Update") {
 				try {
+					if (!data?._id) {
+						console.error("No image ID found for update");
+						setIsSubmitting(false);
+						return;
+					}
 					const updatedImage = await updateImage({
 						image: {
 							...imageData,
-							_id: data?._id,
+							_id: data._id,
 						},
 						userId,
 						path: `/transformations/${data._id}`,
