@@ -7,38 +7,38 @@ import { twMerge } from "tailwind-merge";
 import { aspectRatioOptions } from "@/constants/SidebarLinks";
 
 export function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs));
 }
 
 // ERROR HANDLER
 export const handleError = (error: unknown) => {
-	if (error instanceof Error) {
-		console.error(error.message);
-		throw new Error(`Error: ${error.message}`);
-	} else if (typeof error === "string") {
-		console.error(error);
-		throw new Error(`Error: ${error}`);
-	} else {
-		// Safely stringify error, avoiding React objects
-		try {
-			const errorStr = JSON.stringify(error, (key, value) => {
-				// Skip functions and undefined
-				if (typeof value === "function" || value === undefined) {
-					return null;
-				}
-				// Skip React-related objects
-				if (value && typeof value === "object" && ("$$typeof" in value || "useContext" in value)) {
-					return "[React Object]";
-				}
-				return value;
-			});
-			console.error("Unknown error:", errorStr);
-			throw new Error(`Unknown error: ${errorStr}`);
-		} catch {
-			console.error("Error occurred but could not be serialized");
-			throw new Error("An unknown error occurred");
-		}
-	}
+  if (error instanceof Error) {
+    console.error(error.message);
+    throw new Error(`Error: ${error.message}`);
+  } else if (typeof error === "string") {
+    console.error(error);
+    throw new Error(`Error: ${error}`);
+  } else {
+    // Safely stringify error, avoiding React objects
+    try {
+      const errorStr = JSON.stringify(error, (key, value) => {
+        // Skip functions and undefined
+        if (typeof value === "function" || value === undefined) {
+          return null;
+        }
+        // Skip React-related objects
+        if (value && typeof value === "object" && ("$$typeof" in value || "useContext" in value)) {
+          return "[React Object]";
+        }
+        return value;
+      });
+      console.error("Unknown error:", errorStr);
+      throw new Error(`Unknown error: ${errorStr}`);
+    } catch {
+      console.error("Error occurred but could not be serialized");
+      throw new Error("An unknown error occurred");
+    }
+  }
 };
 
 // PLACEHOLDER LOADER - while image is transforming
@@ -57,116 +57,106 @@ const shimmer = (w: number, h: number) => `
 </svg>`;
 
 const toBase64 = (str: string) =>
-	typeof window === "undefined"
-		? Buffer.from(str).toString("base64")
-		: window.btoa(str);
+  typeof window === "undefined" ? Buffer.from(str).toString("base64") : window.btoa(str);
 
-export const dataUrl = `data:image/svg+xml;base64,${toBase64(
-	shimmer(1000, 1000)
-)}`;
+export const dataUrl = `data:image/svg+xml;base64,${toBase64(shimmer(1000, 1000))}`;
 // ==== End
 
-// FORM URL QUERY
-export const formUrlQuery = ({
-	searchParams,
-	key,
-	value,
-}: FormUrlQueryParams) => {
-	const params = { ...qs.parse(searchParams.toString()), [key]: value };
+// TYPE DEFINITIONS
+export type FormUrlQueryParam = {
+  searchParams: string;
+  key: string;
+  value: string | null;
+};
 
-	return `${window.location.pathname}?${qs.stringify(params, {
-		skipNulls: true,
-	})}`;
+export type RemoveUrlQueryParams = {
+  searchParams: string;
+  keysToRemove: string[];
+};
+
+// FORM URL QUERY
+export const formUrlQuery = ({ searchParams, key, value }: FormUrlQueryParam) => {
+  const params = { ...qs.parse(searchParams.toString()), [key]: value };
+
+  return `${window.location.pathname}?${qs.stringify(params, {
+    skipNulls: true,
+  })}`;
 };
 
 // REMOVE KEY FROM QUERY
-export function removeKeysFromQuery({
-	searchParams,
-	keysToRemove,
-}: RemoveUrlQueryParams) {
-	const currentUrl = qs.parse(searchParams);
+export function removeKeysFromQuery({ searchParams, keysToRemove }: RemoveUrlQueryParams) {
+  const currentUrl = qs.parse(searchParams);
 
-	keysToRemove.forEach((key: string | number) => {
-		delete currentUrl[key];
-	});
+  keysToRemove.forEach((key: string | number) => {
+    delete currentUrl[key];
+  });
 
-	// Remove null or undefined values
-	Object.keys(currentUrl).forEach(
-		(key) => currentUrl[key] == null && delete currentUrl[key]
-	);
+  // Remove null or undefined values
+  Object.keys(currentUrl).forEach((key) => currentUrl[key] == null && delete currentUrl[key]);
 
-	return `${window.location.pathname}?${qs.stringify(currentUrl)}`;
+  return `${window.location.pathname}?${qs.stringify(currentUrl)}`;
 }
 
 // DEBOUNCE
 export const debounce = (func: (...args: any[]) => void, delay: number) => {
-	let timeoutId: NodeJS.Timeout | null;
-	return (...args: any[]) => {
-		if (timeoutId) clearTimeout(timeoutId);
-		timeoutId = setTimeout(() => func.apply(null, args), delay);
-	};
+  let timeoutId: NodeJS.Timeout | null;
+  return (...args: any[]) => {
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(null, args), delay);
+  };
 };
 
 // GE IMAGE SIZE
 export type AspectRatioKey = keyof typeof aspectRatioOptions;
-export const getImageSize = (
-	type: string,
-	image: any,
-	dimension: "width" | "height"
-): number => {
-	if (type === "fill") {
-		return (
-			aspectRatioOptions[image.aspectRatio as AspectRatioKey]?.[
-				dimension
-			] || 1000
-		);
-	}
-	return image?.[dimension] || 1000;
+export const getImageSize = (type: string, image: any, dimension: "width" | "height"): number => {
+  if (type === "fill") {
+    return aspectRatioOptions[image.aspectRatio as AspectRatioKey]?.[dimension] || 1000;
+  }
+  return image?.[dimension] || 1000;
 };
 
 // DOWNLOAD IMAGE
 export const download = (url: string, filename: string) => {
-	if (!url) {
-		throw new Error("Resource URL not provided! You need to provide one");
-	}
+  if (!url) {
+    throw new Error("Resource URL not provided! You need to provide one");
+  }
 
-	fetch(url)
-		.then((response) => response.blob())
-		.then((blob) => {
-			const blobURL = URL.createObjectURL(blob);
-			const a = document.createElement("a");
-			a.href = blobURL;
+  fetch(url)
+    .then((response) => response.blob())
+    .then((blob) => {
+      const blobURL = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobURL;
 
-			if (filename && filename.length)
-				a.download = `${filename.replace(" ", "_")}.png`;
-			document.body.appendChild(a);
-			a.click();
-		})
-		.catch((error) => console.error("Download failed:", error));
+      if (filename && filename.length) a.download = `${filename.replace(" ", "_")}.png`;
+      document.body.appendChild(a);
+      a.click();
+    })
+    .catch((error) => console.error("Download failed:", error));
 };
 
 // DEEP MERGE OBJECTS
 export const deepMergeObjects = (obj1: any, obj2: any) => {
-	if (obj2 === null || obj2 === undefined) {
-		return obj1;
-	}
+  if (obj2 === null || obj2 === undefined) {
+    return obj1;
+  }
 
-	let output = { ...obj2 };
+  let output = { ...obj2 };
 
-	for (let key in obj1) {
-		if (obj1.hasOwnProperty(key)) {
-			if (
-				obj1[key] &&
-				typeof obj1[key] === "object" &&
-				obj2[key] &&
-				typeof obj2[key] === "object"
-			) {
-				output[key] = deepMergeObjects(obj1[key], obj2[key]);
-			} else {
-				output[key] = obj1[key];
-			}
-		}
-	}
+  for (let key in obj1) {
+    if (obj1.hasOwnProperty(key)) {
+      if (
+        obj1[key] &&
+        typeof obj1[key] === "object" &&
+        obj2[key] &&
+        typeof obj2[key] === "object"
+      ) {
+        output[key] = deepMergeObjects(obj1[key], obj2[key]);
+      } else {
+        output[key] = obj1[key];
+      }
+    }
+  }
 
-	return output;
+  return output;
 };
