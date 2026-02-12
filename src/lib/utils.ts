@@ -66,7 +66,7 @@ export const dataUrl = `data:image/svg+xml;base64,${toBase64(shimmer(1000, 1000)
 export type FormUrlQueryParam = {
   searchParams: string;
   key: string;
-  value: string | null;
+  value: string | number | null;
 };
 
 export type RemoveUrlQueryParams = {
@@ -76,7 +76,8 @@ export type RemoveUrlQueryParams = {
 
 // FORM URL QUERY
 export const formUrlQuery = ({ searchParams, key, value }: FormUrlQueryParam) => {
-  const params = { ...qs.parse(searchParams.toString()), [key]: value };
+  const normalizedValue = value == null ? null : String(value);
+  const params = { ...qs.parse(searchParams.toString()), [key]: normalizedValue };
 
   return `${window.location.pathname}?${qs.stringify(params, {
     skipNulls: true,
